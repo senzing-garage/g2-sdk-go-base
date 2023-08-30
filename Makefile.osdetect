@@ -1,31 +1,46 @@
+MAKEFILE_PATH := $(abspath $(filter makefile Makefile,$(MAKEFILE_LIST)))
+MAKEFILE_DIRECTORY := $(dir $(MAKEFILE_PATH))
 ifeq ($(OS),Windows_NT)
-    OSTYPE = windows
-    ifeq ($(PROCESSOR_ARCHITECTURE), AMD64)
-        OSARCH = x86_64
+    OSTYPE := windows
+    OSARCH := x86_64
+    ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+        OSARCH := x86_64
     endif
-    ifeq ($(PROCESSOR_ARCHITECTURE), ARM64)
-        OSARCH = arm4
+    ifeq ($(PROCESSOR_ARCHITECTURE),ARM64)
+        OSARCH := arm4
     endif
+    PATH_SEPARATOR := $(strip \)
+    MAKEFILE_PATH := $(subst /,$(PATH_SEPARATOR),$(MAKEFILE_PATH))
+    MAKEFILE_DIRECTORY := $(subst /,$(PATH_SEPARATOR),$(MAKEFILE_DIRECTORY))
+    PATH := $(PATH);$(MAKEFILE_DIRECTORY)bin\windows
+    LINE_COUNT=find /c /v "" 
 else
-    UNAME_OSTYPE = $(shell uname -s)
+    PATH_SEPARATOR:=/
+    PATH := $(PATH):$(MAKEFILE_DIRECTORY)bin/unix-like
+    LINE_COUNT := wc -l
+    UNAME_OSTYPE := $(shell uname -s)
     ifeq ($(UNAME_OSTYPE),Linux)
-        OSTYPE = linux
+        OSTYPE := linux
+        PATH := $(PATH):$(MAKEFILE_DIRECTORY)bin/linux
         UNAME_ARCH = $(shell uname -p)
         ifeq ($(UNAME_ARCH),x86_64)
-            OSARCH = x86_64
+            OSARCH := x86_64
         endif
         ifeq ($(UNAME_ARCH),arm64)
-            OSARCH = arm64
+            OSARCH := arm64
         endif
     endif
     ifeq ($(UNAME_OSTYPE),Darwin)
-        OSTYPE = darwin
-        UNAME_ARCH = $(shell uname -m)
+        OSTYPE := darwin
+        UNAME_ARCH := $(shell uname -m)
         ifeq ($(UNAME_ARCH),x86_64)
-            OSARCH = x86_64
+            OSARCH := x86_64
         endif
         ifeq ($(UNAME_ARCH),arm64)
-            OSARCH = arm64
+            OSARCH := arm64
         endif
+        PATH := $(PATH):$(MAKEFILE_DIRECTORY)bin/macos
     endif
 endif
+export PATH
+
